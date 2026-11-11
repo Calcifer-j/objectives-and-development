@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance and development guide</title>
+<style>
+ :root {
+ --pink: #d53880;
+ --ink: #0b0c0c;
+ --grey: #505a5f;
+ --light-grey: #f3f2f1;
+ --border-grey: #b1b4b6;
+ --code-bg: #0b0c0c;
+ --code-text: #e5e5e5;
+ }
+ * { box-sizing: border-box; }
+ html { scroll-behavior: smooth; }
+ body {
+ margin: 0;
+ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+ color: var(--ink);
+ background: #ffffff;
+ line-height: 1.6;
+ }
+
+ .layout { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+
+ nav.side {
+ background: var(--light-grey);
+ border-right: 1px solid var(--border-grey);
+ padding: 24px 0 60px;
+ position: sticky;
+ top: 0;
+ height: 100vh;
+ overflow-y: auto;
+ }
+
+ nav.side .brand {
+ display: flex; align-items: center; gap: 8px;
+ padding: 0 22px 18px; font-weight: bold; font-size: 1.05rem;
+ border-bottom: 1px solid var(--border-grey); margin-bottom: 10px;
+ }
+
+ .logo-dot {
+ width: 24px; height: 24px; border-radius: 50%;
+ background: var(--pink); display: inline-flex; align-items: center;
+ justify-content: center; flex-shrink: 0;
+ }
+ .logo-dot svg { width: 16px; height: 16px; }
+
+ .group-label {
+ font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+ color: var(--grey); padding: 18px 22px 6px;
+ }
+
+ nav.side a {
+ display: block; padding: 9px 22px; color: var(--ink); text-decoration: none;
+ font-size: 0.95rem; border-left: 3px solid transparent; line-height: 1.4;
+ }
+ nav.side a:hover { background: #e8e7e5; }
+ nav.side a.active { border-left-color: var(--pink); background: #ffffff; font-weight: 600; }
+
+ main { padding: 44px 56px 100px; max-width: 760px; }
+
+ .page { display: none; }
+ .page.active { display: block; }
+
+ .crumb { font-size: 0.95rem; color: var(--grey); margin-bottom: 20px; }
+
+ h1 { font-size: 2.1rem; margin: 0 0 20px; line-height: 1.2; }
+ h2 { font-size: 1.6rem; margin: 40px 0 16px; }
+ h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+
+ p { font-size: 1.1rem; margin: 0 0 18px; }
+ ul, ol { font-size: 1.1rem; padding-left: 26px; margin: 0 0 18px; }
+ li { margin-bottom: 8px; }
+
+ .callout {
+ background: var(--light-grey); border-left: 4px solid var(--pink);
+ padding: 18px 22px; margin: 20px 0 28px; border-radius: 0 4px 4px 0;
+ }
+ .callout p { margin: 0; font-size: 1.05rem; }
+ .callout p + p { margin-top: 12px; }
+ .callout strong { color: var(--ink); }
+
+ .inset-text {
+ border-left: 10px solid var(--border-grey);
+ padding: 15px 0 15px 20px; margin: 20px 0;
+ }
+ .inset-text p { margin: 0; }
+
+ .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+ @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } .layout { grid-template-columns: 1fr; } nav.side { position: relative; height: auto; } main { padding: 28px; } }
+
+ .card { border: 1px solid var(--border-grey); border-radius: 6px; padding: 18px 20px; }
+ .card h4 { margin: 0 0 10px; font-size: 1.05rem; }
+ .card.pros h4 { color: #00703c; }
+ .card.cons h4 { color: #d4351c; }
+ .card ul { margin: 0; padding-left: 20px; font-size: 1rem; }
+ .card li { margin-bottom: 6px; }
+
+ .step-list { counter-reset: step; list-style: none; padding-left: 0; }
+ .step-list > li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 20px; }
+ .step-list > li::before {
+ content: counter(step); position: absolute; left: 0; top: 0;
+ width: 30px; height: 30px; border-radius: 50%; background: var(--pink); color: #fff;
+ font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
+ }
+ .step-list p { margin: 0 0 10px; font-size: 1.1rem; }
+
+ table { width: 100%; border-collapse: collapse; margin: 20px 0 28px; font-size: 1rem; }
+ th, td { border: 1px solid var(--border-grey); padding: 12px 14px; text-align: left; vertical-align: top; }
+ th { background: var(--light-grey); font-weight: 600; }
+ tr:nth-child(even) { background: #fafafa; }
+
+ .tag { display: inline-block; background: var(--pink); color: #fff; font-size: 0.8rem; font-weight: bold; padding: 3px 10px; border-radius: 3px; margin-bottom: 10px; }
+
+ .page-pager { display: flex; justify-content: space-between; margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--border-grey); }
+ .page-pager a { color: var(--pink); text-decoration: none; font-weight: 600; font-size: 0.98rem; }
+ .page-pager a:hover { text-decoration: underline; }
+
+ footer.page-footer { color: var(--grey); font-size: 0.9rem; margin-top: 60px; }
+ footer.page-footer a { color: var(--pink); }
+
+ a { color: var(--pink); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+ <nav class="side" id="sideNav">
+ <div class="brand">
+ <span class="logo-dot">
+ <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+   <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#fff"/>
+ </svg>
+ </span>
+ Performance and development guide
+ </div>
+ <div class="group-label">Overview</div>
+ <a href="#introduction" data-id="introduction" class="nav-link">Introduction</a>
+ <a href="#objectives" data-id="objectives" class="nav-link">Objectives</a>
+ <a href="#development" data-id="development" class="nav-link">Development</a>
+ <a href="#feedback" data-id="feedback" class="nav-link">Feedback</a>
+ <div class="group-label">Guide for line managers</div>
+ <a href="#lm-objective-meetings" data-id="lm-objective-meetings" class="nav-link">Running objective-setting meetings</a>
+ <a href="#lm-midyear" data-id="lm-midyear" class="nav-link">Running mid-year reviews</a>
+ <a href="#lm-endyear" data-id="lm-endyear" class="nav-link">Running end-of-year reviews</a>
+ <a href="#lm-career" data-id="lm-career" class="nav-link">Running career conversations</a>
+ <div class="group-label">Guide for line reports</div>
+ <a href="#lr-writing" data-id="lr-writing" class="nav-link">Writing your objectives</a>
+ <a href="#lr-objective-meetings" data-id="lr-objective-meetings" class="nav-link">Preparing for objective-setting</a>
+ <a href="#lr-midyear" data-id="lr-midyear" class="nav-link">Preparing for mid-year reviews</a>
+ <a href="#lr-endyear" data-id="lr-endyear" class="nav-link">Preparing for end-of-year reviews</a>
+ <a href="#lr-career" data-id="lr-career" class="nav-link">Preparing for career conversations</a>
+ </nav>
+
+ <main id="mainContent">
+
+<!-- ============================================================
+GROUP: Overview
+============================================================ -->
+
+ <section class="page" id="page-introduction" data-id="introduction">
+ <h1>Performance and development guide</h1>
+
+ <p>This guide is for content designers, interaction designers and user researchers at senior, lead and head levels, and their line managers.</p>
+
+ <p>It covers:</p>
+ <ul>
+   <li>how objectives and development work together</li>
+   <li>setting objectives and running reviews (for line managers)</li>
+   <li>writing objectives and preparing for reviews (for line reports)</li>
+   <li>skills tables and a document template you can use</li>
+ </ul>
+
+ <h2>How objectives and development work together</h2>
+
+ <p>Your performance and development are shaped by 2 complementary frameworks:</p>
+ <ol>
+   <li>Objectives: what you need to achieve in your role (how you know what good looks like).</li>
+   <li>Development: how you build the skills to perform and progress (and can make sure you design your objectives and deliverables to meet these)</li>
+ </ol>
+
+ <p>These are separate but connected. Objectives define the outcomes expected of you this year. Development helps you grow the capabilities you need – both to meet those objectives and to progress in your career.</p>
+
+ <p>Your objectives and development plan should work together:</p>
+
+ <table>
+   <tr>
+     <th>Objectives</th>
+     <th>Development</th>
+   </tr>
+   <tr>
+     <td>Define what you need to deliver this year</td>
+     <td>Define the skills you need to build</td>
+   </tr>
+   <tr>
+     <td>Based on your role and programme needs</td>
+     <td>Based on the skills and behaviours you need to demonstrate for your profession and grade</td>
+   </tr>
+   <tr>
+     <td>Measured by outcomes and impact</td>
+     <td>Measured by capability growth and feedback</td>
+   </tr>
+   <tr>
+     <td>Reviewed at mid-year and end-of-year</td>
+     <td>Discussed at career development meetings and regular 1:1s</td>
+   </tr>
+ </table>
+
+ <h2>The performance year at a glance</h2>
+
+ <table>
+   <tr>
+     <th>Activity</th>
+     <th>When</th>
+     <th>Focus</th>
+   </tr>
+   <tr>
+     <td>Objective setting and development planning</td>
+     <td>Start of year or within 3 months of joining</td>
+     <td>Agree 4-6 SMART objectives covering role, community and (if applicable) line management. Identify and agree what you need to do to develop in your role</td>
+   </tr>
+   <tr>
+     <td>Monthly/quarterly reviews</td>
+     <td>Throughout the year</td>
+     <td>Track progress, gather feedback, note achievements</td>
+   </tr>
+   <tr>
+     <td>Mid-year review and development review</td>
+     <td>6 months into performance year</td>
+     <td>Check progress on objectives and development. Discuss indicative rating and adjust plans if needed. Review development goals and direction.</td>
+   </tr>
+   <tr>
+     <td>End-of-year review</td>
+     <td>End of performance year</td>
+     <td>Assess full year. Agree performance rating. Plan for next year.</td>
+   </tr>
+
+ </table>
+ </section>
+
+ <section class="page" id="page-objectives" data-id="objectives">
+ <h1>Objectives: what you need to achieve</h1>
+
+ <p>Objectives relate to your role. They describe:</p>
+ <ul>
+   <li>key deliverables: what you need to produce or accomplish</li>
+   <li>methods: how you'll approach the work</li>
+ </ul>
+
+ <p>Objectives define what you need to achieve to meet expectations. They also acknowledge what you would need to do to exceed expectations, for example:</p>
+ <ul>
+   <li>training others in your area of expertise</li>
+   <li>people coming to you for advice on how to do something</li>
+   <li>contributing beyond your immediate team or programme</li>
+ </ul>
+
+ <p>Good objectives are SMART: specific, measurable, achievable, realistic and timed.</p>
+
+ <h2>Civil Service behaviours</h2>
+
+ <p>As well as delivering objectives, you're assessed on how you work - the behaviours you demonstrate. The Civil Service has 9 behaviours grouped into 3 clusters:</p>
+
+ <ul>
+   <li>Setting direction: seeing the big picture, changing and improving, making effective decisions</li>
+   <li>Engaging people: leadership, communicating and influencing, working together</li>
+   <li>Delivering results: developing self and others, managing a quality service, delivering at pace</li>
+ </ul>
+
+ <p>What's expected at each behaviour depends on your grade. Senior content designers, interaction designers and user researchers are typically at SEO level. Leads are typically Grade 7. Heads are typically Grade 6.</p>
+
+ <p>See the full behaviour descriptions for:</p>
+ <ul>
+   <li><a href="https://www.gov.uk/government/publications/success-profiles/success-profiles-civil-service-behaviours#higher-executive-officer-heo-and-senior-executive-officer-seo-grades-or-equivalent">SEO level behaviours</a> (senior roles)</li>
+   <li><a href="https://www.gov.uk/government/publications/success-profiles/success-profiles-civil-service-behaviours#grade-7-and-grade-6-or-equivalent">Grade 6 and 7 behaviours</a> (lead and head roles)</li>
+ </ul>
+
+ <h2>Typical objectives for senior, lead and head roles</h2>
+
+ <p>Most people at these levels should have 5 or 6 objectives, including at least:</p>
+ <ul>
+   <li>one community objective (contributing outside your day-to-day role)</li>
+   <li>one corporate objective (adding value to the wider organisation)</li>
+ </ul>
+
+ <p>If you're a line manager, you should also have an objective about line management.</p>
+
+ <h3>Example objective areas</h3>
+
+ <table>
+   <tr>
+     <th>Area</th>
+     <th>What this covers</th>
+   </tr>
+   <tr>
+     <td>Expert practice</td>
+     <td>Writing, editing, designing or researching to a high standard. Using evidence and data to inform decisions. Focusing on user needs and accessibility.</td>
+   </tr>
+   <tr>
+     <td>Stakeholder relationships</td>
+     <td>Building and maintaining relationships with internal and cross-government stakeholders. Clarifying needs and negotiating priorities.</td>
+   </tr>
+   <tr>
+     <td>Team success</td>
+     <td>Ensuring output meets quality standards. Maintaining products or services to agreed levels. Identifying and filling knowledge gaps.</td>
+   </tr>
+   <tr>
+     <td>Project leadership</td>
+     <td>Helping teams understand problems. Scoping work and managing delivery. Dealing with blockers and documenting decisions.</td>
+   </tr>
+   <tr>
+     <td>Line management</td>
+     <td>Setting objectives, providing regular feedback, actively managing performance, supporting development.</td>
+   </tr>
+   <tr>
+     <td>Community and corporate</td>
+     <td>Contributing to communities of practice, sharing knowledge, championing your discipline.</td>
+   </tr>
+ </table>
+ </section>
+
+ <section class="page" id="page-development" data-id="development">
+ <h1>Development: building your skills</h1>
+
+ <p>Development is based on your role's skills, as defined in the <a href="https://understand-digital-data-roles-skills.service.gov.uk/">Government Digital and Data Profession (GDaD)</a> Capability Framework, which defines:</p>
+ <ul>
+   <li>what skills digital roles require at each level from associate to head</li>
+   <li>what proficiency looks like, from awareness through working and practitioner to expert</li>
+   <li>how skills differ between levels, helping you understand what you need to develop to progress</li>
+ </ul>
+
+ <p>You can see these for each digital role, for example:</p>
+ <ul>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/content-designer/">Content designer</a></li>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/interaction-designer/">Interaction designer</a></li>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/user-researcher/">User researcher</a></li>
+ </ul>
+
+ <p>You can use these to identify the skills expected in your role and grade, and use these to set development goals help you:</p>
+ <ul>
+   <li>perform your current role well (meeting objectives)</li>
+   <li>build capability for your next role (career progression)</li>
+ </ul>
+
+ <p> You can track development progress using 'skill levels':</p>
+   <ul>
+     <li>Awareness: you can describe the fundamentals and demonstrate basic knowledge</li>
+     <li>Working: you can apply the skill with some support</li>
+     <li>Practitioner: you can apply the skill without support and share knowledge</li>
+     <li>Expert: you can lead and guide others in best practice</li>
+   </ul>
+
+ <h2>GDaD skills for each role</h2>
+
+ <p>The GDaD framework defines the skills required for each role:</p>
+ <ul>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/content-designer/">Content designer</a></li>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/interaction-designer/">Interaction designer</a></li>
+   <li><a href="https://understand-digital-data-roles-skills.service.gov.uk/role/user-researcher/">User researcher</a></li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-feedback" data-id="feedback">
+ <h1>Giving and receiving feedback</h1>
+
+ <p>Feedback helps people understand what they're doing well and where they can improve. You should ask and share this throughout the year, not just before reviews.</p>
+
+ <p>Give feedback as close to the event as possible, while it's still fresh. Don't save it up for review meetings.</p>
+
+ <p>Feedback should be a normal part of how you work, for example:</p>
+ <ul>
+   <li>ask for feedback yourself - and show you act on it</li>
+   <li>build feedback into regular activities (retros, show and tells, 1:1s)</li>
+   <li>thank people when they give you feedback, even if it's hard to hear</li>
+   <li>ask colleagues how they prefer to receive feedback - some want it immediately, others need time to process</li>
+ </ul>
+
+ <h2>How to give effective feedback</h2>
+
+ <p>Effective feedback is specific, focuses on behaviour not personality, and gives the person something they can act on. It can be hard to give negative feedback, but focus on the fact you are helping the person to learn and grow)</p>
+
+ <p>Use this structure:</p>
+ <ol>
+   <li>Situation: describe the specific circumstances or context</li>
+   <li>Behaviour: describe what you observed them do (be specific, give examples)</li>
+   <li>Impact: explain how their behaviour affected you, the team, or the outcome</li>
+   <li>Way forward: for developmental feedback, suggest alternatives; for positive feedback, explain why you'd like them to continue</li>
+ </ol>
+
+ <h2>How to receive difficult feedback</h2>
+
+ <p>It can be difficult to receive negative feedback, especially when it's not what you expected. You might feel defensive, upset, or want to argue back. This is normal.</p>
+
+ <p>When you receive difficult feedback:</p>
+ <ul>
+   <li>listen fully before responding - don't interrupt or start defending yourself</li>
+   <li>ask clarifying questions if you need to</li>
+   <li>take time to process - it's fine to say "thank you, I need some time to think about this"</li>
+   <li>separate the message from your feelings about it or a value-statment about your worth - even poorly delivered feedback can contain useful insight</li>
+   <li>focus on what you can learn, not on whether you agree with everything</li>
+ </ul>
+
+ <p>Remember: nobody's perfect and we all have space for improvement. Feedback is information that can help you improve, not a judgement of your worth.</p>
+
+ </section>
+
+
+<!-- ============================================================
+GROUP: Guide for line managers
+============================================================ -->
+
+
+ <section class="page" id="page-lm-objective-meetings" data-id="lm-objective-meetings">
+ <h1>Running objective-setting meetings</h1>
+
+ <p>Objective-setting meetings are an opportunity to agree objectives and development goals for the year. They should be collaborative, with both you and your line report. You may also want to combine this with a <a href="#lm-career">career development conversation</a>.</p>
+
+<p>Work with your line report to set 4 to 6 objectives at the start of the year (or within 3 months of joining). These should include:</p>
+ <ul>
+   <li>their role (for example, support the Extract team)</li>
+   <li>extra contributions (for example, work in the community)</li>
+   <li>(optional) leadership or line management</li>
+ </ul>
+
+ <h3>Help them set realistic objectives and goals</h3>
+
+ <p>Help them outline how they'll achieve each objective in a SMART way, for example:</p>
+ <ul>
+   <li>Specific: clear about what they'll achieve</li>
+   <li>Measurable: something they can evidence progress and success against</li>
+   <li>Achievable: realistic, and stretching if they're aiming for development</li>
+   <li>Realistic: within their control and resources</li>
+   <li>Timed: clear deadlines or milestones</li>
+ </ul>
+
+ <p>Help them break this down into what and how:</p>
+ <ul>
+   <li>What they need to do: specific, measurable, timed</li>
+   <li>How they will do it: achievable, realistic</li>
+ </ul>
+
+ <p>Objectives and outlines should relate to expectations from <a href="https://www.gov.uk/government/publications/success-profiles/success-profiles-civil-service-behaviours">Civil Service behaviours</a> and their <a href="https://understand-digital-data-roles-skills.service.gov.uk/">GDaD skills for their role</a>.</p>
+
+ <h2>Before the meeting</h2>
+ <ul>
+   <li>Review their role description and GDaD skills for their level</li>
+   <li>Review any previous objectives and development plans</li>
+   <li>Look at upcoming programme priorities and how their role might contribute</li>
+   <li>Consider their development goals (from previous conversations)</li>
+   <li>Review any notes they've made about what they want to achieve and how (if they've shared these with you beforehand)</li>
+ </ul>
+
+ <h2>During the meeting</h2>
+ <ul>
+   <li>Discuss what success looks like for the coming year</li>
+   <li>Agree 5-6 objectives together</li>
+   <li>Discuss their approach for what they want to achieve and how</li>
+   <li>Identify any training or support they'll need</li>
+   <li>Agree how and when you'll track progress</li>
+ </ul>
+
+ <h2>After the meeting</h2>
+ <ul>
+   <li>Document objectives so you can refer to them later if you need to</li>
+   <li>Schedule regular 1:1s to track progress</li>
+   <li>Plan quarterly reviews</li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-lm-midyear" data-id="lm-midyear">
+ <h1>Running mid-year review meetings</h1>
+
+ <p>The mid-year review checks progress on objectives and development goals. It's also an opportunity to adjust plans if circumstances have changed. You may also want to combine this with a <a href="#lm-career">career development conversation</a>.</p>
+
+ <h2>Before the meeting</h2>
+ <ul>
+   <li>Ask your line report to send you their Objectives record with their self-assessment and feedback</li>
+   <li>Review their objectives, feedback and examples</li>
+   <li>Review their development goals</li>
+ </ul>
+
+ <h2>Structure for the meeting</h2>
+
+ <h3>1. Performance (how the last 6 months have been)</h3>
+ <ul>
+   <li>What were their highlights?</li>
+   <li>What were their greatest areas of development?</li>
+   <li>How did it compare to expectations?</li>
+   <li>What could have gone better?</li>
+   <li>Discuss feedback they've gathered</li>
+ </ul>
+
+ <h3>2. Development (progress on their development plan)</h3>
+ <ul>
+   <li>Review their personal development plan</li>
+   <li>What learning have they completed?</li>
+   <li>What learning is planned for the next 6 months?</li>
+   <li>Discuss how development supports their objectives and career</li>
+ </ul>
+
+ <h3>3. Wellbeing</h3>
+ <ul>
+   <li>Do they have everything they need?</li>
+   <li>Does their working pattern suit them?</li>
+   <li>Are any adjustments needed?</li>
+ </ul>
+
+ <h3>4. Indicative rating</h3>
+
+ <p>Discuss an indicative performance rating and identify any actions which could improve it:</p>
+ <ul>
+   <li>Exceeding: exceeded objectives on both delivery and behaviours, mastered current role, contributes beyond immediate team, develops colleagues</li>
+   <li>Achieving: met expectations, delivered to standard with positive feedback, consistently demonstrated skills and behaviours for the role</li>
+   <li>Partially achieving: meeting expectations in some areas but not all (6-month transition rating)</li>
+   <li>Needs to improve: not meeting expectations, requires focused support (3-month transition rating)</li>
+ </ul>
+
+ <h3>5. Discuss next steps</h3>
+ <ul>
+   <li>What are expectations for the next 6 months?</li>
+   <li>Do any objectives or development goals which need to be adjusted?</li>
+   <li>What support do they need from you?</li>
+ </ul>
+
+ <h2>After the meeting</h2>
+ <ul>
+   <li>Document the discussion</li>
+   <li>Review the discussion and feedback with your line report</li>
+   <li>Follow up on any actions</li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-lm-endyear" data-id="lm-endyear">
+ <h1>Running end-of-year review meetings</h1>
+
+ <p>End-of-year reviews assess the full year's performance and agree an official performance rating.</p>
+
+  <h2>Before the meeting</h2>
+ <ul>
+   <li>Ask your line report to send you their Objectives record with their self-assessment and feedback</li>
+   <li>Review their objectives, feedback and examples</li>
+   <li>Review their development goals</li>
+ </ul>
+
+ <h2>Structure for the meeting</h2>
+
+ <h3>1. Performance (how the last 12 months have been)</h3>
+ <ul>
+   <li>What were their highlights?</li>
+   <li>What were their greatest areas of development?</li>
+   <li>How did it compare to expectations?</li>
+   <li>What could have gone better?</li>
+   <li>Discuss feedback they've gathered</li>
+ </ul>
+
+ <h3>2. Development (progress on their development plan)</h3>
+ <ul>
+   <li>Review their personal development plan</li>
+   <li>What learning have they completed?</li>
+   <li>Discuss how their development supported their objectives and career, and any identified gaps</li>
+ </ul>
+
+ <h3>3. Wellbeing</h3>
+ <ul>
+   <li>Do they have everything they need?</li>
+   <li>Does their working pattern suit them?</li>
+   <li>Are any adjustments needed?</li>
+ </ul>
+
+ <h3>4. Performance rating</h3>
+
+ <p>Discuss their final performance rating:</p>
+ <ul>
+   <li>Exceeding: exceeded objectives on both delivery and behaviours, mastered current role, contributes beyond immediate team, develops colleagues</li>
+   <li>Achieving: met expectations, delivered to standard with positive feedback, consistently demonstrated skills and behaviours for the role</li>
+   <li>Partially achieving: meeting expectations in some areas but not all (6-month transition rating)</li>
+   <li>Needs to improve: not meeting expectations, requires focused support (3-month transition rating)</li>
+ </ul>
+
+
+   <p>To achieve an 'exceeding' rating on an objective, someone typically needs to:</p>
+   <ul>
+   <li>exceed objectives on both delivery and behaviours</li>
+   <li>master their current role</li>
+   <li>contribute regularly beyond their immediate team</li>
+   <li>regularly develop colleagues</li>
+   <li>work consistently to the highest standards</li>
+   </ul>
+
+   <p>To assign an overall performance rating, review the average rating for all objectives.</p>
+
+ <h3>5. Discuss next steps</h3>
+ <ul>
+   <li>What are expectations for the next 6 months?</li>
+   <li>Do any objectives or development goals which need to be adjusted?</li>
+   <li>What support do they need from you?</li>
+ </ul>
+
+ <h2>After the meeting</h2>
+ <ul>
+   <li>Document the discussion</li>
+   <li>Review the discussion and feedback with your line report</li>
+   <li>Follow up on any actions</li>
+ </ul>
+ 
+ </section>
+
+ <section class="page" id="page-lm-career" data-id="lm-career">
+ <h1>Running career development conversations</h1>
+
+ <p>Career development conversations help you understand where your line report wants to go in their career and how you can support them to get there.</p>
+
+ <h2>Before the conversation</h2>
+
+ <p>Review:</p>
+ <ul>
+   <li>what you already know about what they want from their career? (for example, previous development discussions)</li>
+   <li>their work and feedback to understand their current skill level</li>
+   <li>what development opportunities are available</li>
+ </ul>
+
+ <p>Ask them to prepare by thinking about:</p>
+ <ul>
+   <li>what they enjoy</li>
+   <li>what <a href="https://understand-digital-data-roles-skills.service.gov.uk/">GDaD skill</a> or <a href="https://www.gov.uk/government/publications/success-profiles/success-profiles-civil-service-behaviours">Civil Service behaviour</a> gaps they want to address</li>
+ </ul>
+
+ <h2>Opening the conversation</h2>
+
+ <p>Start the conversation by making it clear that this is a safe space to talk about their career. You want to understand their aspirations and how you can support them, not judge them. For example:</p>
+
+ <p>"This is a chance to talk about your career - where you want to go and how I can help you get there. It's separate from performance, and nothing you say will affect your rating. If your plans involve moving to another team or even another organisation, that's fine - I want to help you develop in the direction that's right for you."</p>
+
+ <h2>Understanding their current situation</h2>
+
+ <p>Use the 9-box diamond to understand where they are and where they want to develop. Consider where they are along each axis.</p>
+
+ <div style="max-width: 500px; margin: 20px auto;">
+ <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+   <!-- Background -->
+   <rect width="400" height="420" fill="#f3f2f1"/>
+   
+   <!-- Diamond shape rotated 45 degrees -->
+   <g transform="translate(200, 200)">
+     <!-- Cell backgrounds -->
+     <!-- Top - Star (red) -->
+     <polygon points="0,-170 57,-113 0,-57 -57,-113" fill="#d4351c"/>
+     
+     <!-- Second row - Excellent, Strong (orange) -->
+     <polygon points="-57,-113 0,-57 -57,0 -113,-57" fill="#f47738"/>
+     <polygon points="57,-113 113,-57 57,0 0,-57" fill="#f47738"/>
+     
+     <!-- Middle row - High Potential, Good, Expert (yellow) -->
+     <polygon points="-113,-57 -57,0 -113,57 -170,0" fill="#ffdd00"/>
+     <polygon points="0,-57 57,0 0,57 -57,0" fill="#ffdd00"/>
+     <polygon points="113,-57 170,0 113,57 57,0" fill="#ffdd00"/>
+     
+     <!-- Fourth row - Early Promise, Effective (green) -->
+     <polygon points="-57,0 0,57 -57,113 -113,57" fill="#00703c"/>
+     <polygon points="57,0 113,57 57,113 0,57" fill="#00703c"/>
+     
+     <!-- Bottom - Inconsistent (blue) -->
+     <polygon points="0,57 57,113 0,170 -57,113" fill="#1d70b8"/>
+     
+     <!-- Outer diamond border -->
+     <polygon points="0,-170 170,0 0,170 -170,0" fill="none" stroke="#0b0c0c" stroke-width="2"/>
+     
+     <!-- Inner lines creating 9 sections -->
+     <line x1="-57" y1="-113" x2="113" y2="57" stroke="#0b0c0c" stroke-width="1"/>
+     <line x1="-113" y1="-57" x2="57" y2="113" stroke="#0b0c0c" stroke-width="1"/>
+     <line x1="57" y1="-113" x2="-113" y2="57" stroke="#0b0c0c" stroke-width="1"/>
+     <line x1="113" y1="-57" x2="-57" y2="113" stroke="#0b0c0c" stroke-width="1"/>
+     
+     <!-- Labels -->
+     <!-- Top point -->
+     <text x="0" y="-105" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">Star</text>
+     
+     <!-- Second row -->
+     <text x="-57" y="-50" text-anchor="middle" font-size="10" font-weight="bold" fill="#0b0c0c">Excellent</text>
+     <text x="57" y="-50" text-anchor="middle" font-size="10" font-weight="bold" fill="#0b0c0c">Strong</text>
+     
+     <!-- Middle row -->
+     <text x="-113" y="-5" text-anchor="middle" font-size="9" font-weight="bold" fill="#0b0c0c">High</text>
+     <text x="-113" y="7" text-anchor="middle" font-size="9" font-weight="bold" fill="#0b0c0c">Potential</text>
+     <text x="0" y="5" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b0c0c">Good</text>
+     <text x="113" y="5" text-anchor="middle" font-size="11" font-weight="bold" fill="#0b0c0c">Expert</text>
+     
+     <!-- Fourth row -->
+     <text x="-57" y="50" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffffff">Early</text>
+     <text x="-57" y="62" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffffff">Promise</text>
+     <text x="57" y="55" text-anchor="middle" font-size="10" font-weight="bold" fill="#ffffff">Effective</text>
+     
+     <!-- Bottom point -->
+     <text x="0" y="115" text-anchor="middle" font-size="10" font-weight="bold" fill="#ffffff">Inconsistent</text>
+   </g>
+   
+   <!-- Axis labels -->
+   <text x="200" y="410" text-anchor="middle" font-size="12" fill="#0b0c0c">Readiness →</text>
+   <text x="15" y="200" text-anchor="middle" font-size="12" fill="#0b0c0c" transform="rotate(-90, 15, 200)">Sustained contribution →</text>
+ </svg>
+ </div>
+
+  <p>Sustained contribution (vertical) is about how embedded they are in their role - their expertise, experience and technical knowledge. You could ask:</p>
+ <ul>
+   <li>"How confident do you feel in your role day-to-day?"</li>
+   <li>"What parts of the job come naturally now that felt hard when you started?"</li>
+   <li>"Where do people come to you for advice or expertise?"</li>
+ </ul>
+
+ <p>Readiness (horizontal) is about how ready and willing they are to progress to the next levelYou could ask:</p>
+ <ul>
+   <li>"Where do you see yourself in 1-2 years? 3-5 years?"</li>
+   <li>"Are you interested in progressing to the next level, or developing deeper expertise where you are?"</li>
+   <li>"What would need to change for you to feel ready for a more senior role?"</li>
+ </ul>
+
+ <p>You can find more detail in the <a href="https://cdn.learn.civilservice.gov.uk/packages/0KVAs-oWSxa-8uY6aJzJ9Q/51-bOlL3SZSuMsMOJ813uA/2020-05-20_Talent%20Management%20Guidance.pdf">Civil Service talent management guidance</a>.</p>
+
+ <h2>If you see things differently</h2>
+
+ <p>It's common to disagree about where someone is. If they place themselves higher or lower than you would:</p>
+ <ul>
+   <li>ask what evidence led them to that view</li>
+   <li>share specific examples that inform your perspective</li>
+   <li>focus on agreeing what development would help, rather than arguing about the exact position</li>
+ </ul>
+
+ <p>The position matters less than having a useful conversation about what happens next.</p>
+
+ <h3>How to support your line report</h3>
+
+ <p>Listen for both capability and aspiration. Someone might have the skills to progress but not want to. That's fine - help them meet their development goals. Use their position on the diamond to guide how you support them.</p>
+
+ <h4>High sustained contribution (Star, Strong, Expert)</h4>
+ <p>These people demonstrate technical knowledge and understanding with strong qualifications:</p>
+ <ul>
+   <li>Star: ready to be promoted now - celebrate exceptional performance, give stretch at the next level, encourage them to apply for senior vacancies and support their applications</li>
+   <li>Strong: may be ready for promotion to specific roles within their specialism - challenge them to exceed, increase strategic responsibilities, explore leadership development programmes</li>
+   <li>Expert: highly valued and respected but unlikely or unwilling to move up - celebrate their expertise, encourage them to mentor others, look at specialist qualifications to develop further</li>
+ </ul>
+
+ <h4>Medium sustained contribution (Excellent, Good, Effective)</h4>
+ <p>These people are fully effective and building up experience and technical knowledge:</p>
+ <ul>
+   <li>Excellent: showing real readiness for promotion in 1-3 years - challenge them to exceed, continue developing along both axes, start active planning for next role</li>
+   <li>Good: experienced and delivering strongly with potential to develop further - build on effectiveness, broaden experience, consider secondments or project groups, get a coach or mentor</li>
+   <li>Effective: meeting all expectations but best suited to current grade for now - maintain performance, build on effectiveness, look at subject-specific qualifications</li>
+ </ul>
+
+ <h4>Lower sustained contribution (High Potential, Early Promise, Inconsistent)</h4>
+ <p>These people are new to their role, grade or profession and building up their time and knowledge:</p>
+ <ul>
+   <li>High Potential: strong initial impact but new or inexperienced - develop along the sustained contribution axis through job shadowing, coaching, qualifications; continue preparing for level up</li>
+   <li>Early Promise: new to post or grade with signs of long-term potential - challenge to improve, develop sustained contribution through shadowing and coaching, start developing behaviours for next level</li>
+   <li>Inconsistent: not fully effective in role with competency gaps - investigate what's happening, work to become effective through job shadowing, courses, increase personal effectiveness skills</li>
+ </ul>
+
+ <h2>Support them to build a development plan</h2>
+
+ <p>Once you understand where they are and their aspirations, you can help them create a development plan that identifies skills they want to build. Use the <a href="https://understand-digital-data-roles-skills.service.gov.uk/">GDaD framework</a> together to work out where they are and where they want to be.</p>
+
+ <p>Your role is to:</p>
+ <ul>
+   <li>suggest opportunities you're aware of - projects, secondments, shadowing, cross-government work</li>
+   <li>facilitate introductions to people who could help - mentors, coaches, people in roles they're interested in</li>
+   <li>help them identify stretch assignments within their current work</li>
+   <li>make time and space for their development - it shouldn't always be on top of a full workload</li>
+ </ul>
+
+ <p>Development isn't just courses. Think about:</p>
+ <ul>
+   <li>Learning on the job: stretch assignments, leading a piece of work, shadowing someone senior</li>
+   <li>Learning from others: mentoring, coaching, communities of practice, pairing with colleagues</li>
+   <li>Formal learning: training courses, qualifications, conferences</li>
+   <li>Learning by doing: secondments, project work outside your usual area, contributing to cross-government initiatives</li>
+ </ul>
+
+ <h2>After the conversation</h2>
+ <ul>
+   <li>Capture agreed development priorities in their plan</li>
+   <li>Look together at job descriptions for roles they're interested in</li>
+   <li>Identify specific development activities - not just courses, but experiences, projects, shadowing</li>
+   <li>Agree when you'll check in on progress</li>
+ </ul>
+ </section>
+
+<!-- ============================================================
+GROUP: Guide for line reports
+============================================================ -->
+
+ <section class="page" id="page-lr-writing" data-id="lr-writing">
+ <h1>Writing your objectives</h1>
+
+ <p>At the beginning of the year, choose 4 to 6 objectives which describe your general activities, for example:</p>
+ <ul>
+   <li>your role (for example, support the Extract team)</li>
+   <li>extra contributions (for example, work in the community)</li>
+   <li>(optional) leadership or line management</li>
+ </ul>
+
+ <h2>Make objectives SMART</h2>
+
+ <p>You need to outline how you plan to achieve your objective, making sure you're SMART:</p>
+ <ul>
+   <li>Specific: clear about what you'll achieve</li>
+   <li>Measurable: use something where you can evidence progress and success</li>
+   <li>Achievable: realistic, and stretching if you're aiming for development</li>
+   <li>Realistic: within your control and resources</li>
+   <li>Timed: have clear deadlines or milestones</li>
+ </ul>
+
+ <p>Break this down into what and how:</p>
+ <ul>
+   <li>What you need to do: specific, measurable, timed</li>
+   <li>How you will do it: achievable, realistic</li>
+ </ul>
+
+  <p>Your objectives and descriptions should link to the <a href="https://www.gov.uk/government/publications/success-profiles/success-profiles-civil-service-behaviours">behaviours</a> expected at your grade and your <a href="https://understand-digital-data-roles-skills.service.gov.uk/">GDaD skills</a>.</p>
+
+<div class="inset-text">
+   <p>Download the <a href="Objectives%20and%20development%20template.docx">Objectives and development template</a> to record your objectives, development and progress throughout the year.</p>
+ </div>
+
+ <h2>Record progress throughout the year</h2>
+
+ <p>As you work on your objectives, record:</p>
+ <ul>
+   <li>examples (deliverables): evidence of work you've completed</li>
+   <li>GDaD skills used</li>
+   <li>Civil Service behaviours used</li>
+ </ul>
+
+ This helps you evidence your progress and achievements for your mid-year and end-of-year reviews. It also helps you reflect on your development and identify areas for growth.
+
+ <h3>Gather high performing examples to demonstrate skills and development</h3>
+
+ <p>Some examples can be used to exemplify your skills and behaviours, and you can use these in interviews and your end of year discussions. Consider this:</p>
+ <ul>
+   <li>after completing a significant piece of work or project</li>
+   <li>when you get highly positive feedback from stakeholders or colleagues</li>
+   <li>when you handle something difficult or learn from a mistake</li>
+   <li>when you demonstrate a skill you're developing</li>
+ </ul>
+
+ <div class="inset-text">
+   <p>Record these details as soon as you can after you've completed the work - this is much easier than trying to remember six months later.</p>
+ </div>
+
+ <p>Use the STARR framework to write these examples in a thorough way:</p>
+ <ul>
+   <li>Situation: describe the specific circumstances or context</li>
+   <li>Task: describe the task you were trying to achieve</li>
+   <li>Action: describe what you did to achieve the task</li>
+   <li>Result: describe the outcome of your actions</li>
+   <li>Reflection: describe what you learned and what you would do differently next time</li>
+ </ul>
+
+ </section>
+
+ <section class="page" id="page-lr-objective-meetings" data-id="lr-objective-meetings">
+ <h1>Preparing for objective-setting meetings</h1>
+
+ <p>Objective-setting meetings are an opportunity to agree objectives and development goals for the year. They should be collaborative, with both you and your line manager. You may also want to combine this with a <a href="#lr-career">career development conversation</a>.</p>
+
+ <h2>Before the meeting</h2>
+ <ul>
+   <li>Review your role description and the GDaD skills for your level</li>
+   <li>Think about your programme or team's priorities</li>
+   <li>Consider your career aspirations</li>
+ </ul>
+
+ <h2>During the meeting</h2>
+ <ul>
+   <li>Discuss what success looks like for the coming year</li>
+   <li>Be honest about what's achievable</li>
+   <li>Ask for the support or training you need</li>
+   <li>Agree how you'll track progress</li>
+ </ul>
+
+ <h2>After the meeting</h2>
+ <ul>
+   <li>Make sure objectives are documented</li>
+   <li>Set up your personal development plan</li>
+   <li>Schedule regular 1:1s with your line manager</li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-lr-midyear" data-id="lr-midyear">
+ <h1>Preparing for mid-year reviews</h1>
+
+ <p>Mid-year is a chance to check progress, celebrate achievements and adjust plans if needed. You may also want to combine this conversation with a <a href="#lr-career">career development conversation</a>.</p> 
+
+ <h2>Before the meeting</h2>
+
+ <h3>Complete your self-assessment</h3>
+ <p>Review your objectives and note progress against each. Use the STARR examples you've been recording throughout the year.</p>
+
+ <h3>Gather feedback</h3>
+ <p><a href="#feedback">Feedback</a> from others strengthens your evidence. It shows how your work landed with the people who experienced it.</p>
+
+ <p>Think about 5 or 6 people who can speak to different aspects of your work - colleagues you've collaborated with, stakeholders you've presented to, people you've mentored, people in other teams who've seen your work.</p>
+
+ <p>Be specific when asking. "Can you give me some feedback?" is hard to answer. Try:</p>
+ <ul>
+   <li>"I'm gathering evidence for my mid-year review. Could you share your thoughts on how the [project] went and what I contributed?"</li>
+   <li>"What's one thing I did well on [project] and one thing I could improve?"</li>
+ </ul>
+
+ <p>Don't leave it until the week before your review. Ask now, while people still remember the detail.</p>
+
+ <h3>Add feedback to your template</h3>
+ <p>Add your feedback to the appendix in your template. This keeps all your evidence in one place.</p>
+
+ <h3>Share your template with your line manager</h3>
+ <p>Send your updated template to your line manager before the meeting so they can review your notes and feedback.</p>
+
+ <h3>Reflect on the bigger picture</h3>
+ <ul>
+   <li>What's gone well and what are you proud of?</li>
+   <li>What's been difficult or could have gone better?</li>
+   <li>How's your wellbeing? Do you need any support or adjustments?</li>
+ </ul>
+
+ <h2>During the meeting, expect to discuss:</h2>
+
+ <h3>1. Performance</h3>
+ <ul>
+   <li>How have the last 6 months been?</li>
+   <li>What were your highlights?</li>
+   <li>What were your greatest areas of development?</li>
+   <li>What could have gone better?</li>
+ </ul>
+
+ <h3>2. Development</h3>
+ <ul>
+   <li>What learning have you completed?</li>
+   <li>What's planned for the next 6 months?</li>
+ </ul>
+
+ <h3>3. Wellbeing</h3>
+ <ul>
+   <li>Do you have everything you need?</li>
+   <li>Is your working pattern right for you?</li>
+ </ul>
+
+ <h3>4. Indicative rating</h3>
+
+ <p>You'll discuss an indicative performance rating. This is not confirmed until after consistency checking.</p>
+
+ <p>The 4 ratings are:</p>
+ <ul>
+   <li>Exceeding: you've exceeded objectives on both delivery and behaviours, mastered your role, contributed beyond your team, and developed others</li>
+   <li>Achieving: you've met expectations, delivered to standard with positive feedback, and consistently demonstrated skills and behaviours for your role</li>
+   <li>Partially achieving: you're meeting expectations in some areas but not all (6-month transition rating)</li>
+   <li>Needs to improve: you're not meeting expectations, requires focused support (3-month transition rating)</li>
+ </ul>
+
+ <h3>5. Looking ahead</h3>
+ <ul>
+   <li>What are your expectations for the next 6 months?</li>
+   <li>Do any objectives need adjusting?</li>
+   <li>What do you need from your line manager?</li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-lr-endyear" data-id="lr-endyear">
+ <h1>Preparing for end-of-year reviews</h1>
+
+ <p>End-of-year reviews assess your full year and agree a performance rating.</p>
+
+ <h2>Before the meeting</h2>
+ <ul>
+   <li>Update your template with examples and evidence from the second half of the year</li>
+   <li>Gather <a href="#feedback">feedback</a> if you haven't already</li>
+   <li>Add your feedback to the appendix in your template</li>
+   <li>Send your updated template to your line manager so they can review your notes and feedback</li>
+ </ul>
+
+ <h2>The 4 ratings</h2>
+
+ <table>
+   <tr>
+     <th>Rating</th>
+     <th>What it means</th>
+   </tr>
+   <tr>
+     <td><strong>Exceeding</strong></td>
+     <td>You've exceeded expectations on both what you delivered and how you delivered it. You've mastered your role, contributed beyond your team, and developed others.</td>
+   </tr>
+   <tr>
+     <td><strong>Achieving</strong></td>
+     <td>You've met expectations. You've delivered to the required standard with positive feedback, and consistently demonstrated the skills and behaviours for your role.</td>
+   </tr>
+   <tr>
+     <td><strong>Partially achieving</strong></td>
+     <td>You're meeting expectations in some areas but not all. This is typically a 6-month transition rating while you develop in specific areas.</td>
+   </tr>
+   <tr>
+     <td><strong>Needs to improve</strong></td>
+     <td>You're not meeting expectations. This requires focused support and improvement within 3 months.</td>
+   </tr>
+ </table>
+
+ <h2>To achieve 'exceeding', you typically need to:</h2>
+ <ul>
+   <li>exceed all your objectives</li>
+   <li>demonstrate behaviours beyond your current level</li>
+   <li>contribute to the wider organisation</li>
+   <li>help develop colleagues</li>
+   <li>be seen as a role model</li>
+ </ul>
+ </section>
+
+ <section class="page" id="page-lr-career" data-id="lr-career">
+ <h1>Preparing for career conversations</h1>
+
+ <p>Career development conversations support you to develop and grow in your career.</p>
+
+ <h2>Before the conversation</h2>
+
+ <p>Think about:</p>
+ <ul>
+   <li>How do you feel about your current role? What do you enjoy? What's frustrating?</li>
+   <li>Do you want to progress to the next level, or develop deeper expertise where you are?</li>
+   <li>Are there other roles or areas that interest you?</li>
+   <li>Where do you want to be in 1-2 years? 3-5 years?</li>
+ </ul>
+
+ <p>Be honest with yourself. It's fine to say you're happy where you are, or that you're not sure what you want yet.</p>
+
+ <h2>During the meeting</h2>
+ 
+ <p>Your line manager may use the <a href="https://cdn.learn.civilservice.gov.uk/packages/0KVAs-oWSxa-8uY6aJzJ9Q/51-bOlL3SZSuMsMOJ813uA/2020-05-20_Talent%20Management%20Guidance.pdf">9-box diamond</a> to structure career conversations. This plots where you are against where you want to go, based on:</p>
+ <ul>
+   <li>Sustained contribution: how embedded you are in your role - your expertise, experience and impact</li>
+   <li>Readiness: how ready and willing you are to progress to the next level</li>
+ </ul>
+
+ <p>There's no 'bad' position. Someone who's an "Expert" with deep knowledge but no interest in managing people is just as valuable as a "Star" who's ready for promotion. The point is to have an honest conversation about what development would help you.</p>
+
+ <h3>If you disagree with the position</h3>
+ <p>It's common to see things differently. If you think you're more (or less) ready than your manager suggests:</p>
+ <ul>
+   <li>share the evidence that informs your view - specific examples of work you've done</li>
+   <li>ask what evidence they're drawing on</li>
+   <li>focus on agreeing what development would help, rather than arguing about the exact position</li>
+ </ul>
+
+ <h2>Build a Development plan</h2>
+
+ <p>Once you have identified where you are you and your line manager can build a development plan. 
+  
+  This should identify skills you want to build. Use the <a href="https://understand-digital-data-roles-skills.service.gov.uk/">GDaD framework</a> to work out where you are and where you want to be.</p>
+
+ <h3>1. Find your current level</h3>
+ <p>Look at the skills for your role at your level. For each skill, ask yourself: can I do this independently? Do I need support? Am I guiding others? This tells you whether you're at awareness, working, practitioner or expert.</p>
+
+ <h3>2. Identify where you want to be</h3>
+ <p>Look at the level above yours, or at a different role you're interested in. Which skills do you need to develop? For example, a senior content designer at practitioner level in "Evidence-based design" might need to reach expert level to progress to lead.</p>
+
+ <h3>3. Plan how to close the gap</h3>
+ <p>Think about what experiences would help you develop each skill. For example:</p>
+ <ul>
+   <li>To develop "Leading design": offer to run a design crit, lead a show and tell, or mentor a junior colleague</li>
+   <li>To develop "Stakeholder relationship management": ask to join a cross-government working group, or take the lead on a tricky stakeholder conversation</li>
+   <li>To develop "Analysis and synthesis": volunteer to lead synthesis on a research round, or run a workshop to bring findings together across projects</li>
+ </ul>
+
+ <p>Development isn't just courses. Think about:</p>
+ <ul>
+   <li>Learning on the job: stretch assignments, leading a piece of work, shadowing someone senior</li>
+   <li>Learning from others: mentoring, coaching, communities of practice, pairing with colleagues</li>
+   <li>Formal learning: training courses, qualifications, conferences</li>
+   <li>Learning by doing: secondments, project work outside your usual area, contributing to cross-government initiatives</li>
+ </ul>
+
+ </section>
+
+ <footer class="page-footer">Email jenny.bradley@dsit.gov.uk with comments and suggestions - or use this form to <a href="https://forms.cloud.microsoft/pages/responsepage.aspx?id=BXCsy8EC60O0l-ZJLRst2FLcpzkg6RVBh7eU_8sMk6lUMDdIWlVaWUFBNVpRMzZCWVpRT1dMMEMzOC4u&route=shorturl">share feedback</a>.</footer>
+ </main>
+</div>
+
+<script>
+const order = ["introduction","objectives","development","feedback","lm-objective-meetings","lm-midyear","lm-endyear","lm-career","lr-writing","lr-objective-meetings","lr-midyear","lr-endyear","lr-career"];
+const titles = {};
+document.querySelectorAll('.page').forEach(p => { titles[p.dataset.id] = p.querySelector('h1').textContent; });
+
+function showPage(id) {
+ if (!order.includes(id)) id = order[0];
+ document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.dataset.id === id));
+ document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.id === id));
+
+ const idx = order.indexOf(id);
+ const prevId = order[idx - 1];
+ const nextId = order[idx + 1];
+ const activePage = document.getElementById('page-' + id);
+
+ let existingPager = activePage.querySelector('.page-pager');
+ if (existingPager) existingPager.remove();
+
+ const pager = document.createElement('div');
+ pager.className = 'page-pager';
+ pager.innerHTML = `
+ <span>${prevId ? `&larr; <a href="#${prevId}">${titles[prevId]}</a>` : ''}</span>
+ <span>${nextId ? `<a href="#${nextId}">${titles[nextId]}</a> &rarr;` : ''}</span>
+ `;
+ activePage.appendChild(pager);
+
+ document.getElementById('mainContent').scrollTo(0, 0);
+ window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', () => showPage(location.hash.slice(1)));
+showPage(location.hash.slice(1) || order[0]);
+</script>
+
+</body>
+</html>
